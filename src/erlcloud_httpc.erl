@@ -46,8 +46,10 @@ request(URL, Method, Hdrs, Body, Timeout,
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = undefined, http_proxy = undefined}) ->
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, []);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{http_proxy = HttpProxy, lhttpc_pool = undefined}) ->
-    LHttpcOpts = [{proxy, HttpProxy}],
-    lhttpc:request(URL, Method, Hdrs, Body, Timeout, LHttpcOpts);
+    {'ok', {Scheme, _UserInfo, Host, Port, _Path, _Query}} = http_uri:parse(HttpProxy),
+    {'ok', {_Scheme, UserInfo, _Host, _Port, Path, Query}} = http_uri:parse(URL),
+    U = atom_to_list(Scheme) ++ "://" ++ Host ++ ":" ++ integer_to_list(Port) ++ Path ++ Query,
+    lhttpc:request(U, Method, Hdrs, Body, Timeout, []);
 request_lhttpc(URL, Method, Hdrs, Body, Timeout, #aws_config{lhttpc_pool = Pool, http_proxy = undefined}) ->
     LHttpcOpts = [{pool, Pool}, {pool_ensure, true}],
     lhttpc:request(URL, Method, Hdrs, Body, Timeout, LHttpcOpts);
